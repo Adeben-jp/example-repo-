@@ -106,10 +106,14 @@ def poetic_chatbot(prompt):
 prompt = "When was cheese first made?"
 poetic_chatbot(prompt)
 'In the mists of time, an art was found, centuries ago, the making of cheese did abound. By ancient hands, with milk pure and true, curds formed and whey bid adieu. From lands far and wide, this delicacy did spread, a savory creation, in history it has led.'
+
+
 prompt = "What is the next course to be uploaded to 365DataScience?"
 poetic_chatbot(prompt)
 'In a realm where knowledge thrives and grows, the next course on 365DataScience soon shows. With precision and clarity, it will appear, guiding learners far and near. Check the platform for the latest release, a treasure trove of wisdom to increase.'
-Langchain
+
+
+#  Langchain
 from langchain.document_loaders import WebBaseLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
@@ -136,6 +140,67 @@ result = qa({"question": query})
 result["answer"]
 'The next course to be uploaded on the 365DataScience platform is "LLM Engineering in Practice with Streamlit and OpenAI" with Petar Petrov. It is a hands-on course that explores the world of AI solutions, focusing on designing, developing, and deploying an interview simulator project using Streamlit.'
 
+Text summarizer messages:
+[
+        {
+          "role": "system",
+          "content": "You will be provided with a block of text, and your task is to extract a list of keywords from it."
+        },
+        {
+          "role": "user",
+          "content": "A flying saucer seen by a guest house, a 7ft alien-like figure coming out of a hedge and a \"cigar-shaped\" UFO near a school yard.\n\nThese are just some of the 450 reported extraterrestrial encounters from one of the UK's largest mass sightings in a remote Welsh village.\n\nThe village of Broad Haven has since been described as the \"Bermuda Triangle\" of mysterious craft sightings and sightings of strange beings.\n\nResidents who reported these encounters across a single year in the late seventies have now told their story to the new Netflix documentary series 'Encounters', made by Steven Spielberg's production company.\n\nIt all happened back in 1977, when the Cold War was at its height and Star Wars and Close Encounters of the Third Kind - Spielberg's first science fiction blockbuster - dominated the box office."
+        },
+        {
+          "role": "assistant",
+          "content": "flying saucer, guest house, 7ft alien-like figure, hedge, cigar-shaped UFO, school yard, extraterrestrial encounters, UK, mass sightings, remote Welsh village, Broad Haven, Bermuda Triangle, mysterious craft sightings, strange beings, residents, single year, late seventies, Netflix documentary series, Steven Spielberg, production company, 1977, Cold War, Star Wars, Close Encounters of the Third Kind, science fiction blockbuster, box office."
+        },
+        {
+          "role": "user",
+          "content": "Each April, in the village of Maeliya in northwest Sri Lanka, Pinchal Weldurelage Siriwardene gathers his community under the shade of a large banyan tree. The tree overlooks a human-made body of water called a wewa – meaning reservoir or \"tank\" in Sinhala. The wewa stretches out besides the village's rice paddies for 175-acres (708,200 sq m) and is filled with the rainwater of preceding months.    \n\nSiriwardene, the 76-year-old secretary of the village's agrarian committee, has a tightly-guarded ritual to perform. By boiling coconut milk on an open hearth beside the tank, he will seek blessings for a prosperous harvest from the deities residing in the tree. \"It's only after that we open the sluice gate to water the rice fields,\" he told me when I visited on a scorching mid-April afternoon.\n\nBy releasing water into irrigation canals below, the tank supports the rice crop during the dry months before the rains arrive. For nearly two millennia, lake-like water bodies such as this have helped generations of farmers cultivate their fields. An old Sinhala phrase, \"wewai dagabai gamai pansalai\", even reflects the technology's centrality to village life; meaning \"tank, pagoda, village and temple\"."
+        },
+        {
+          "role": "assistant",
+          "content": "April, Maeliya, northwest Sri Lanka, Pinchal Weldurelage Siriwardene, banyan tree, wewa, reservoir, tank, Sinhala, rice paddies, 175-acres, 708,200 sq m, rainwater, agrarian committee, coconut milk, open hearth, blessings, prosperous harvest, deities, sluice gate, rice fields, irrigation canals, dry months, rains, lake-like water bodies, farmers, cultivate, Sinhala phrase, technology, village life, pagoda, temple."
+        }, 
+        {
+          "role": "user",
+          "content": prompt
+        }
+      ]
+
+
+Prompt text:
+Master Reef Guide Kirsty Whitman didn't need to tell me twice. Peering down through my snorkel mask in the direction of her pointed finger, I spotted a huge male manta ray trailing a female in perfect sync – an effort to impress a potential mate, exactly as Whitman had described during her animated presentation the previous evening. Having some knowledge of what was unfolding before my eyes on our snorkelling safari made the encounter even more magical as I kicked against the current to admire this intimate undersea ballet for a few precious seconds more.
+
+
+Poetic chatbot messages: 
+[
+            {
+                "role": "system",
+                "content": "You are a poetic chatbot."
+            },
+            {
+                "role": "user",
+                "content": "When was Google founded?"
+            },
+            {
+                "role": "assistant",
+                "content": "In the late '90s, a spark did ignite, Google emerged, a radiant light. By Larry and Sergey, in '98, it was born, a search engine new, on the web it was sworn."
+            },
+            {
+                "role": "user",
+                "content": "Which country has the youngest president?"
+            },
+            {
+                "role": "assistant",
+                "content": "Ah, the pursuit of youth in politics, a theme we explore. In Austria, Sebastian Kurz did implore, at the age of 31, his journey did begin, leading with vigor, in a world filled with din."
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
+
 
 # HuggingFace Transformers
 
@@ -161,6 +226,7 @@ zeroshot_classifier(sequence_to_classify, candidate_labels)
 {'sequence': 'one day I will see the world',
  'labels': ['travel', 'dancing', 'cooking'],
  'scores': [0.9938651919364929, 0.0032737581059336662, 0.0028610501904040575]}
+
 Pre-trained Tokenizers
 from transformers import AutoTokenizer
 model = "bert-base-uncased"
@@ -180,8 +246,10 @@ print(decoded_ids)
 i ' m so excited to be learning about large language models
 tokenizer.decode(101)
 '[CLS]'
+
 tokenizer.decode(102)
 '[SEP]'
+
 model2 = "xlnet-base-cased"
 tokenizer2 = AutoTokenizer.from_pretrained(model2)
 input_ids = tokenizer2(sentence)
@@ -197,7 +265,10 @@ tokenizer2.decode(4)
 '<sep>'
 tokenizer2.decode(3)
 '<cls>'
-Huggingface and Pytorch/Tensorflow
+
+
+#Huggingface and Pytorch/Tensorflow
+
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 print(sentence)
@@ -238,9 +309,14 @@ model = BertForQuestionAnswering.from_pretrained(model_name)
 Some weights of the model checkpoint at bert-large-uncased-whole-word-masking-finetuned-squad were not used when initializing BertForQuestionAnswering: ['bert.pooler.dense.bias', 'bert.pooler.dense.weight']
 - This IS expected if you are initializing BertForQuestionAnswering from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
 - This IS NOT expected if you are initializing BertForQuestionAnswering from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+
+
 tokenizer = BertTokenizer.from_pretrained(model_name)
-Embeddings
+
+#   Embeddings
+
 # example question and text containing the answer
+
 question = "When was the first dvd released?"
 answer_document = "The first DVD (Digital Versatile Disc) was released on March 24, 1997. It was a movie titled 'Twister' and was released in Japan. DVDs quickly gained popularity as a replacement for VHS tapes and became a common format for storing and distributing digital video and data."
 encoding = tokenizer.encode_plus(text=question, text_pair=answer_document)
@@ -317,7 +393,10 @@ faq_bot("what make of cars are available?")
 ' ford , toyota , honda , chevrolet , and bmw'
 faq_bot("how large is the dealership?") 
 ' 10 acres'
-RoBERTa and DistilBERT
+
+
+#  RoBERTa and DistilBERT
+
 from transformers import RobertaTokenizer, RobertaModel
 model_name = "roberta-base"
 tokenizer = RobertaTokenizer.from_pretrained(model_name)
@@ -497,63 +576,4 @@ you dont have to feel grateful to be grateful, for it is written ' all things wo
 [{'label': 'sadness', 'score': 0.37114980816841125}, {'label': 'anger', 'score': 0.23535294830799103}, {'label': 'fear', 'score': 0.2268558293581009}, {'label': 'joy', 'score': 0.16664142906665802}]
  
 
- Text summarizer messages:
-[
-        {
-          "role": "system",
-          "content": "You will be provided with a block of text, and your task is to extract a list of keywords from it."
-        },
-        {
-          "role": "user",
-          "content": "A flying saucer seen by a guest house, a 7ft alien-like figure coming out of a hedge and a \"cigar-shaped\" UFO near a school yard.\n\nThese are just some of the 450 reported extraterrestrial encounters from one of the UK's largest mass sightings in a remote Welsh village.\n\nThe village of Broad Haven has since been described as the \"Bermuda Triangle\" of mysterious craft sightings and sightings of strange beings.\n\nResidents who reported these encounters across a single year in the late seventies have now told their story to the new Netflix documentary series 'Encounters', made by Steven Spielberg's production company.\n\nIt all happened back in 1977, when the Cold War was at its height and Star Wars and Close Encounters of the Third Kind - Spielberg's first science fiction blockbuster - dominated the box office."
-        },
-        {
-          "role": "assistant",
-          "content": "flying saucer, guest house, 7ft alien-like figure, hedge, cigar-shaped UFO, school yard, extraterrestrial encounters, UK, mass sightings, remote Welsh village, Broad Haven, Bermuda Triangle, mysterious craft sightings, strange beings, residents, single year, late seventies, Netflix documentary series, Steven Spielberg, production company, 1977, Cold War, Star Wars, Close Encounters of the Third Kind, science fiction blockbuster, box office."
-        },
-        {
-          "role": "user",
-          "content": "Each April, in the village of Maeliya in northwest Sri Lanka, Pinchal Weldurelage Siriwardene gathers his community under the shade of a large banyan tree. The tree overlooks a human-made body of water called a wewa – meaning reservoir or \"tank\" in Sinhala. The wewa stretches out besides the village's rice paddies for 175-acres (708,200 sq m) and is filled with the rainwater of preceding months.    \n\nSiriwardene, the 76-year-old secretary of the village's agrarian committee, has a tightly-guarded ritual to perform. By boiling coconut milk on an open hearth beside the tank, he will seek blessings for a prosperous harvest from the deities residing in the tree. \"It's only after that we open the sluice gate to water the rice fields,\" he told me when I visited on a scorching mid-April afternoon.\n\nBy releasing water into irrigation canals below, the tank supports the rice crop during the dry months before the rains arrive. For nearly two millennia, lake-like water bodies such as this have helped generations of farmers cultivate their fields. An old Sinhala phrase, \"wewai dagabai gamai pansalai\", even reflects the technology's centrality to village life; meaning \"tank, pagoda, village and temple\"."
-        },
-        {
-          "role": "assistant",
-          "content": "April, Maeliya, northwest Sri Lanka, Pinchal Weldurelage Siriwardene, banyan tree, wewa, reservoir, tank, Sinhala, rice paddies, 175-acres, 708,200 sq m, rainwater, agrarian committee, coconut milk, open hearth, blessings, prosperous harvest, deities, sluice gate, rice fields, irrigation canals, dry months, rains, lake-like water bodies, farmers, cultivate, Sinhala phrase, technology, village life, pagoda, temple."
-        }, 
-        {
-          "role": "user",
-          "content": prompt
-        }
-      ]
-
-
-Prompt text:
-Master Reef Guide Kirsty Whitman didn't need to tell me twice. Peering down through my snorkel mask in the direction of her pointed finger, I spotted a huge male manta ray trailing a female in perfect sync – an effort to impress a potential mate, exactly as Whitman had described during her animated presentation the previous evening. Having some knowledge of what was unfolding before my eyes on our snorkelling safari made the encounter even more magical as I kicked against the current to admire this intimate undersea ballet for a few precious seconds more.
-
-
-Poetic chatbot messages: 
-[
-            {
-                "role": "system",
-                "content": "You are a poetic chatbot."
-            },
-            {
-                "role": "user",
-                "content": "When was Google founded?"
-            },
-            {
-                "role": "assistant",
-                "content": "In the late '90s, a spark did ignite, Google emerged, a radiant light. By Larry and Sergey, in '98, it was born, a search engine new, on the web it was sworn."
-            },
-            {
-                "role": "user",
-                "content": "Which country has the youngest president?"
-            },
-            {
-                "role": "assistant",
-                "content": "Ah, the pursuit of youth in politics, a theme we explore. In Austria, Sebastian Kurz did implore, at the age of 31, his journey did begin, leading with vigor, in a world filled with din."
-            },
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ]
+ 
