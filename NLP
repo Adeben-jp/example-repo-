@@ -1,0 +1,135 @@
+# Parts of Speech (POS) Tagging
+
+import spacy
+import pandas as pd
+
+nlp = spacy.load('en_core_web_sm')
+# if you are running this for the first time, or recieve an error "Can't find model 'en_core_web_sm'", 
+# then please run the follwing in your terminal: python -m spacy download en_core_web_sm
+
+# our text is from jane austin's 'emma'
+# we have removed punctuation, lowercased but left in stop words
+emma_ja = "emma woodhouse handsome clever and rich with a comfortable home and happy disposition seemed to unite some of the best blessings of existence and had lived nearly twentyone years in the world with very little to distress or vex her she was the youngest of the two daughters of a most affectionate indulgent father and had in consequence of her sisters marriage been mistress of his house from a very early period her mother had died too long ago for her to have more than an indistinct remembrance of her caresses and her place had been supplied by an excellent woman as governess who had fallen little short of a mother in affection sixteen years had miss taylor been in mr woodhouses family less as a governess than a friend very fond of both daughters but particularly of emma between them it was more the intimacy of sisters even before miss taylor had ceased to hold the nominal office of governess the mildness of her temper had hardly allowed her to impose any restraint and the shadow of authority being now long passed away they had been living together as friend and friend very mutually attached and emma doing just what she liked highly esteeming miss taylors judgment but directed chiefly by her own"
+print(emma_ja)
+emma woodhouse handsome clever and rich with a comfortable home and happy disposition seemed to unite some of the best blessings of existence and had lived nearly twentyone years in the world with very little to distress or vex her she was the youngest of the two daughters of a most affectionate indulgent father and had in consequence of her sisters marriage been mistress of his house from a very early period her mother had died too long ago for her to have more than an indistinct remembrance of her caresses and her place had been supplied by an excellent woman as governess who had fallen little short of a mother in affection sixteen years had miss taylor been in mr woodhouses family less as a governess than a friend very fond of both daughters but particularly of emma between them it was more the intimacy of sisters even before miss taylor had ceased to hold the nominal office of governess the mildness of her temper had hardly allowed her to impose any restraint and the shadow of authority being now long passed away they had been living together as friend and friend very mutually attached and emma doing just what she liked highly esteeming miss taylors judgment but directed chiefly by her own
+
+# create a spacy doc from our text - this will generate tokens and their assosciated pos tags
+spacy_doc = nlp(emma_ja)
+
+# extract the tokens and pos tags into a dataframe
+pos_df = pd.DataFrame(columns=['token', 'pos_tag'])
+
+for token in spacy_doc:
+    pos_df = pd.concat([pos_df,
+                       pd.DataFrame.from_records([{'token': token.text, 'pos_tag': token.pos_}])], ignore_index=True)
+
+pos_df.head(15)
+
+token	pos_tag
+0	emma	PROPN
+1	woodhouse	PROPN
+2	handsome	ADJ
+3	clever	ADJ
+4	and	CCONJ
+5	rich	ADJ
+6	with	ADP
+7	a	DET
+8	comfortable	ADJ
+9	home	NOUN
+10	and	CCONJ
+11	happy	ADJ
+12	disposition	NOUN
+13	seemed	VERB
+14	to	PART
+
+# token frequency count
+pos_df_counts = pos_df.groupby(['token','pos_tag']).size().reset_index(name='counts').sort_values(by='counts', ascending=False)
+pos_df_counts.head(10)
+
+token	pos_tag	counts
+88	of	ADP	14
+49	had	AUX	9
+54	her	PRON	9
+111	the	DET	8
+6	and	CCONJ	8
+0	a	DET	6
+114	to	PART	5
+61	in	ADP	4
+13	been	AUX	4
+120	very	ADV	4
+
+# counts of pos_tags
+pos_df_poscounts = pos_df_counts.groupby(['pos_tag'])['token'].count().sort_values(ascending=False)
+pos_df_poscounts.head(10)
+pos_tag
+NOUN     35
+VERB     19
+ADJ      18
+ADV      18
+PRON      9
+ADP       8
+PROPN     6
+DET       5
+AUX       4
+CCONJ     3
+Name: token, dtype: int64
+
+# see most common nouns
+nouns = pos_df_counts[pos_df_counts.pos_tag == "NOUN"][0:10]
+nouns
+token	pos_tag	counts
+48	governess	NOUN	3
+46	friend	NOUN	3
+130	years	NOUN	2
+35	emma	NOUN	2
+28	daughters	NOUN	2
+103	sisters	NOUN	2
+82	mother	NOUN	2
+89	office	NOUN	1
+78	mistress	NOUN	1
+75	mildness	NOUN	1
+
+# see most common verbs
+verbs = pos_df_counts[pos_df_counts.pos_tag == "ADJ"][0:10]
+verbs
+token	pos_tag	counts
+70	little	ADJ	2
+91	own	ADJ	1
+86	nominal	ADJ	1
+79	more	ADJ	1
+102	short	ADJ	1
+98	rich	ADJ	1
+34	early	ADJ	1
+26	comfortable	ADJ	1
+25	clever	ADJ	1
+16	best	ADJ	1
+
+
+# Lowercase
+
+An important first step in working with text data is simply converting it into lowercase. Why do we do this? Well, it helps maintain consistency in our data and our output. When we're working with text, be that exploratory analysis or machine learning, we want to ensure words are understood and counted as the same word, your model might treat a word with a capital letter different from the same word without any capital letter. Lowercasing ensures conformity.
+
+It also make it easier to continue with additonal cleaning of the data as we don’t have to account for different cases.
+
+However, do remember that lowercasing can change the meaning of some text e.g "US" in uppercase is understood as a country, as opposed to "us".
+
+Let's take a look at how easy it is to convert our data to lowercase using python's built in lower() function.
+
+
+sentence = "Her cat's name is Luna"
+print(sentence)
+Her cat's name is Luna
+
+lower_sentence = sentence.lower()
+print(lower_sentence)
+her cat's name is luna
+
+sentence_list = ['Could you pass me the TV remote?', 
+                 'It is IMPOSSIBLE to find this hotel', 
+                 'Want to go for dinner on Tuesday?']
+print(sentence_list)
+['Could you pass me the TV remote?', 'It is IMPOSSIBLE to find this hotel', 'Want to go for dinner on Tuesday?']
+
+lower_sentence_list = [x.lower() for x in sentence_list]
+print(lower_sentence_list)
+['could you pass me the tv remote?', 'it is impossible to find this hotel', 'want to go for dinner on tuesday?']
