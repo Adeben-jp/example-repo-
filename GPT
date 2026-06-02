@@ -16,7 +16,10 @@ prompt = "Once upon a time"
 generated_text = generate_text(prompt)
 print(prompt, generated_text)
 Once upon a time , I was a small business owner. I was
-Customizing the Output
+
+
+# Customizing the Output
+
 def generate_text(prompt, max_tokens, temperature):
     response = openai.Completion.create(
         engine="davinci-002",
@@ -27,10 +30,12 @@ def generate_text(prompt, max_tokens, temperature):
 generated_text = generate_text(prompt, 50, 0)
 print(prompt, generated_text)
 Once upon a time , there was a little girl who was born with a very special gift. She could see things that others could not. She could see the future, and she could see the past. She could see the present, and she could see the future.
+
 generated_text = generate_text(prompt, 50, 1)
 print(prompt, generated_text)
 Once upon a time there was a young Spokane, David Boucher. You’d see him everywhere and he didn’t want to be looked at until you did and then he’d smile and make you feel better. You’d say, “David, we have a Dennis H
-Summarising Text
+
+#  Summarising Text
 def text_summarizer(prompt):
     response = openai.ChatCompletion.create(
       model="gpt-3.5-turbo",
@@ -67,9 +72,13 @@ def text_summarizer(prompt):
 prompt = "Master Reef Guide Kirsty Whitman didn't need to tell me twice. Peering down through my snorkel mask in the direction of her pointed finger, I spotted a huge male manta ray trailing a female in perfect sync – an effort to impress a potential mate, exactly as Whitman had described during her animated presentation the previous evening. Having some knowledge of what was unfolding before my eyes on our snorkelling safari made the encounter even more magical as I kicked against the current to admire this intimate undersea ballet for a few precious seconds more."
 print(prompt)
 Master Reef Guide Kirsty Whitman didn't need to tell me twice. Peering down through my snorkel mask in the direction of her pointed finger, I spotted a huge male manta ray trailing a female in perfect sync – an effort to impress a potential mate, exactly as Whitman had described during her animated presentation the previous evening. Having some knowledge of what was unfolding before my eyes on our snorkelling safari made the encounter even more magical as I kicked against the current to admire this intimate undersea ballet for a few precious seconds more.
+
 text_summarizer(prompt)
 'Master Reef Guide, Kirsty Whitman, snorkel mask, male manta ray, female, impress, potential mate, animated presentation, snorkelling safari, encounter, magical, current, admire, undersea ballet.'
-Poetic Chatbot
+
+
+#  Poetic Chatbot
+
 def poetic_chatbot(prompt):
     response = openai.ChatCompletion.create(
         model = "gpt-3.5-turbo",
