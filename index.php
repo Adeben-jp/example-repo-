@@ -1,0 +1,557 @@
+GameController class="php"></GameController>
+
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Game;
+use App\Services\GameExport;
+use App\Services\GameExport\GameExportContext;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Response as ResponseFacade;
+use Illuminate\View\View;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+
+class GameController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(): view
+    {
+        return view('games.index', [
+            'games' => Game::with('user')->latest()->get()
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+        ]);
+
+        $request->user()->games()->create($validated);
+
+        return redirect(route('games.index'));
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Game $game)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Game $game)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Game $game)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Game $game): RedirectResponse
+    {
+        $this->authorize('delete', $game);
+
+        $game->delete();
+
+        return redirect(route('games.index'));
+    }
+
+    public function export(string $type): Response
+    {
+        $games = Game::all();
+        $context = new GameExportContext();
+
+        if (array_key_exists($type, GameExportContext::STRATEGIES)) {
+            $context = new GameExportContext();
+            $strategy = new (GameExportContext::STRATEGIES[$type]);
+            $context->setStrategy($strategy);
+        $concreteStrategyClassname = $context->loadStrategyByName($type);
+
+            // Headers could be encapsulated in strategies.
+            $headers = [
+                'Content-Type' => 'text/'.$type,
+                'Content-Disposition' => 'attachment; filename="games.'.$type.'"',
+            ];
+
+            // Return CSV file for download
+            return ResponseFacade::make($context->execute($games), 200, $headers);
+        if ($concreteStrategyClassname === null) {
+            throw new NotFoundHttpException(sprintf('The format %s is unknown.', $type));
+        }
+
+        $gameExport = new GameExport();
+
+        if ($type == 'csv') {
+            // Set headers for file download
+            $headers = [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="games.csv"',
+            ];
+
+            // Return CSV file for download
+            return ResponseFacade::make($gameExport->toCsv($games), 200, $headers);
+        } elseif ($type == 'json') {
+            $headers = [
+                'Content-Type' => 'text/json',
+                'Content-Disposition' => 'attachment; filename="games.json"',
+            ];
+
+            // Return CSV file for download
+            return ResponseFacade::make($gameExport->toJson($games), 200, $headers);
+        }
+              $context->setStrategy($strategy);
+
+        // Headers could be encapsulated in strategies.
+        $headers = [
+            'Content-Type' => 'text/'.$type,
+            'Content-Disposition' => 'attachment; filename="games.'.$type.'"',
+        ];
+
+        throw new NotFoundHttpException(sprintf('The format %s is unknown.', $type));
+        // Return CSV file for download
+        return ResponseFacade::make($context->execute($games), 200, $headers);
+    }
+}
+
+
+# GameExportStrategies/GameExportJson.php
+
+<?php
+
+namespace App\Services\GameExport\GameExportStrategies;
+
+use Illuminate\Database\Eloquent\Collection;
+
+class GameExportJson implements GameExportStrategyInterface
+{
+    public function format(Collection|array $games): string
+    {
+        $json = [];
+        foreach ($games as $game) {
+            $json[] = [
+                'id' => $game->id,
+                'title' => $game->title,
+            ];
+        }
+        return json_encode($json);
+    }
+}
+
+
+<app>
+<Services>
+<GameExportStrategies>
+<GameExportXml class="php"></GameExportXml>
+
+
+<?php
+
+namespace App\Services\GameExport\GameExportStrategies;
+
+use Illuminate\Database\Eloquent\Collection;
+
+class GameExportXml implements GameExportStrategyInterface
+{
+    public function format(Collection|array $games): string
+    {
+        $xml = "<?xml version=\"1.0\"?>\n";
+        $xml .= "<games>\n";
+        $xml = "<?xml version=\"1.0\"?>";
+        $xml .= "<games>";
+        foreach ($games as $game) {
+            $xml .= "    <game>\n";
+            $xml .= "        <id>$game->id</id>\n";
+            $xml .= "        <title>$game->title</title>\n";
+            $xml .= "    </game>\n";
+            $xml .= "<game>";
+            $xml .= "<id>$game->id</id>";
+            $xml .= "<title>$game->title</title>";
+            $xml .= "</game>";
+        }
+        $xml .= "</games>\n";
+        $xml .= "</games>";
+        return $xml;
+    }
+}
+
+
+<app>
+<Services>
+<GameExport>
+<GameExportContent class="php"></GameExportContent>
+
+<?php
+
+namespace App\Services\GameExport;
+
+use App\Services\GameExport\GameExportStrategies\GameExportCsv;
+use App\Services\GameExport\GameExportStrategies\GameExportStrategyInterface;
+use App\Services\GameExport\GameExportStrategies\GameExportXml;
+use Illuminate\Database\Eloquent\Collection;
+
+/**
+ * The Context class is the entry point for the rest of the application: controllers and services call this class to
+ * generate an export, which is handled internally.
+ */
+class GameExportContext
+{
+    private GameExportStrategyInterface $strategy;
+
+    /**
+     * List of strategies and their concrete class.
+     * Later on, this can be updated to be automatic instead of a key value array.
+     * Get the name of a concrete strategy by name, or null if it doesn't exist.
+     *
+     * @param $name
+     * @return string|null
+     */
+    const STRATEGIES = [
+        'csv' => GameExportCsv::class,
+        'xml' => GameExportXml::class,
+    ];
+    public function loadStrategyByName($name): ?string
+    {
+        $className = sprintf(
+            'App\Services\GameExport\GameExportStrategies\GameExport%s',
+            ucfirst(strtolower($name))
+        );
+
+        return class_exists($className) ? $className : null;
+    }
+
+    /**
+     * @param GameExportStrategyInterface $strategy
+     */
+    public function setStrategy(GameExportStrategyInterface $strategy): void
+    {
+        $this->strategy = $strategy;
+    }
+
+    /**
+     * @param Collection|array $games
+     * @return string
+     */
+    public function execute(Collection|array $games): string
+    {
+        return $this->strategy->format($games);
+    }
+}
+
+
+<test>
+<Feature>
+<GameTest class="php"></GameTest>
+
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Game;
+use App\Models\User;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Factories\Sequence;
+use Illuminate\Support\Facades\DB;
+use \Tests\TestCase;
+
+class GameTest extends TestCase
+{
+    use DatabaseTransactions;
+
+    /** @var Collection[Games] $games */
+    private Collection $games;
+
+    private User $user;
+
+    /**
+     * Initiate fixtures that can be reused in all tests.
+     *
+     * @return void
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        // Truncate table: usefule to reset auto increment value for Game primary key
+        DB::table('games')->truncate();
+
+        $this->user = User::factory()->create();
+
+        // Create 10 games with name `Game 1`, `Game 2`, etc.
+        $this->games = Game::factory()
+            ->count(10)
+            ->state(new Sequence(
+                fn (Sequence $sequence) => ['user_id' => $this->user, 'title' => 'Game '.$sequence->index+1]
+            ))
+            ->create();
+    }
+
+    public function test_games_exported_to_json(): void
+    {
+        $expectedResult = '[{"id":1,"title":"Game 1"},{"id":2,"title":"Game 2"},{"id":3,"title":"Game 3"},'.
+            '{"id":4,"title":"Game 4"},{"id":5,"title":"Game 5"},{"id":6,"title":"Game 6"},'.
+            '{"id":7,"title":"Game 7"},{"id":8,"title":"Game 8"},{"id":9,"title":"Game 9"},'.
+            '{"id":10,"title":"Game 10"}]';
+
+        $response = $this
+            ->actingAs($this->user)
+            ->get('/games/export/json');
+
+        $response->assertContent($expectedResult);
+    }
+
+    public function test_games_exported_to_csv(): void
+    {
+        $expectedResult = 'id,title
+1,Game 1
+2,Game 2
+3,Game 3
+4,Game 4
+5,Game 5
+6,Game 6
+7,Game 7
+8,Game 8
+9,Game 9
+10,Game 10
+';
+
+        $response = $this
+            ->actingAs($this->user)
+            ->get('/games/export/csv');
+
+        $response->assertContent($expectedResult);
+    }
+
+    public function test_games_exported_to_xml(): void
+    {
+        $expectedResult = '<?xml version="1.0"?>
+<games>
+    <game>
+        <id>1</id>
+        <title>Game 1</title>
+    </game>
+    <game>
+        <id>2</id>
+        <title>Game 2</title>
+    </game>
+    <game>
+        <id>3</id>
+        <title>Game 3</title>
+    </game>
+    <game>
+        <id>4</id>
+        <title>Game 4</title>
+    </game>
+    <game>
+        <id>5</id>
+        <title>Game 5</title>
+    </game>
+    <game>
+        <id>6</id>
+        <title>Game 6</title>
+    </game>
+    <game>
+        <id>7</id>
+        <title>Game 7</title>
+    </game>
+    <game>
+        <id>8</id>
+        <title>Game 8</title>
+    </game>
+    <game>
+        <id>9</id>
+        <title>Game 9</title>
+    </game>
+    <game>
+        <id>10</id>
+        <title>Game 10</title>
+    </game>
+</games>
+';
+        $expectedResult = '<?xml version="1.0"?><games><game><id>1</id><title>Game 1</title></game>'.
+            '<game><id>2</id><title>Game 2</title></game><game><id>3</id><title>Game 3</title></game>'.
+            '<game><id>4</id><title>Game 4</title></game><game><id>5</id><title>Game 5</title></game>'.
+            '<game><id>6</id><title>Game 6</title></game><game><id>7</id><title>Game 7</title></game>'.
+            '<game><id>8</id><title>Game 8</title></game><game><id>9</id><title>Game 9</title></game>'.
+            '<game><id>10</id><title>Game 10</title></game></games>';
+
+        $response = $this
+            ->actingAs($this->user)
+            ->get('/games/export/xml');
+
+        $response->assertContent($expectedResult);
+    }
+}
+
+
+<tests>
+<Unit>
+<GameExportTest class="php">
+    <test>
+    <Unit>
+    <GameExportStrategiesTest class="php"></GameExportStrategiesTest>
+
+<?php
+
+namespace Tests\Unit;
+
+use \App\Services\GameExport;
+use \App\Models\Game;
+use App\Models\Game;
+use App\Services\GameExport\GameExportStrategies\GameExportCsv;
+use App\Services\GameExport\GameExportStrategies\GameExportJson;
+use App\Services\GameExport\GameExportStrategies\GameExportXml;
+use PHPUnit\Framework\Attributes\DataProvider;
+use \PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\TestCase;
+
+class GameExportTest extends TestCase
+class GameExportStrategiesTest extends TestCase
+{
+    /**
+     * @return Game[]
+     */
+    public static function create_fixtures(): array
+    {
+        $game1 = new Game();
+        $game1->id = 1;
+        $game1->title = 'Doom';
+        $game1->setCreatedAt(null);
+        $game1->setUpdatedAt(null);
+
+        $game2 = new Game();
+        $game2->id = 2;
+        $game2->title = 'SimCity';
+        $game2->setCreatedAt(null);
+        $game2->setUpdatedAt(null);
+
+        $game3 = new Game();
+        $game3->id = 3;
+        $game3->title = 'Oregon Trail Deluxe';
+        $game3->setCreatedAt(null);
+        $game3->setUpdatedAt(null);
+
+        return [$game1, $game2, $game3];
+    }
+
+    public static function data_export_to_csv(): array
+    {
+        $games = self::create_fixtures();
+
+        return [
+            'Export multiple records' => [
+                $games, // data
+                "id,title\n1,Doom\n2,SimCity\n3,Oregon Trail Deluxe\n"
+            ],
+            'Export one record' => [
+                [$games[0]], // data
+                "id,title\n1,Doom\n"
+            ],
+            'Export no record' => [
+                [], // data
+                "id,title\n"
+            ],
+        ];
+    }
+
+    #[DataProvider('data_export_to_csv')]
+    public function test_export_to_csv($data, $expectedResult): void
+    {
+        $exporter = new GameExport();
+        $result = $exporter->toCsv($data);
+        $exporter = new GameExportCsv();
+        $result = $exporter->format($data);
+
+        $this->assertEquals($expectedResult, $result);
+    }
+
+    public static function data_export_to_json(): array
+    {
+        $games = self::create_fixtures();
+
+        return [
+            'Export multiple records' => [
+                $games, // data
+                '[{"id":1,"title":"Doom"},{"id":2,"title":"SimCity"},{"id":3,"title":"Oregon Trail Deluxe"}]'
+            ],
+            'Export one record' => [
+                [$games[0]], // data
+                '[{"id":1,"title":"Doom"}]'
+            ],
+            'Export no record' => [
+                [], // data
+                '[]'
+            ],
+        ];
+    }
+
+    #[DataProvider('data_export_to_json')]
+    public function test_export_to_json($data, $expectedResult): void
+    {
+        $exporter = new GameExport();
+        $result = $exporter->toJson($data);
+        $exporter = new GameExportJson();
+        $result = $exporter->format($data);
+
+        $this->assertEquals($expectedResult, $result);
+    }
+
+    public static function data_export_to_xml(): array
+    {
+        $games = self::create_fixtures();
+
+        return [
+            'Export multiple records' => [
+                $games, // data
+                '<?xml version="1.0"?><games><game><id>1</id><title>Doom</title></game>'.
+                '<game><id>2</id><title>SimCity</title></game><game><id>3</id><title>Oregon Trail Deluxe</title></game>'.
+                '</games>'
+            ],
+            'Export one record' => [
+                [$games[0]], // data
+                '<?xml version="1.0"?><games><game><id>1</id><title>Doom</title></game></games>'
+            ],
+            'Export no record' => [
+                [], // data
+                '<?xml version="1.0"?><games></games>'
+            ],
+        ];
+    }
+
+    #[DataProvider('data_export_to_xml')]
+    public function test_export_to_xml($data, $expectedResult): void
+    {
+        $exporter = new GameExportXml();
+        $result = $exporter->format($data);
+
+        $this->assertEquals($expectedResult, $result);
+    }
+}
